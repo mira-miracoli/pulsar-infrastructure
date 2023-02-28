@@ -14,9 +14,20 @@ resource "openstack_compute_instance_v2" "exec-node" {
 
   user_data = <<-EOF
     #cloud-config
+    system_info:
+      default_user:
+        name: centos
+        gecos: RHEL Cloud User
+        groups: [wheel, adm, systemd-journal]
+        sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+        shell: /bin/bash
+      distro: rhel
+      paths:
+        cloud_dir: /var/lib/cloud
+        templates_dir: /etc/cloud/templates
+      ssh_svcname: sshd
     write_files:
     - content: |
-        CONDOR_HOST = ${openstack_compute_instance_v2.central-manager.network.1.fixed_ip_v4}
         ALLOW_WRITE = *
         ALLOW_READ = $(ALLOW_WRITE)
         ALLOW_ADMINISTRATOR = *
@@ -71,7 +82,12 @@ resource "openstack_compute_instance_v2" "exec-node" {
     packages: 
       - ansible
     runcmd:
+      - [ sh, -xc, "sed -i 's|nameserver 10.0.2.3||g' /etc/resolv.conf" ]
+      - [ sh, -xc, "sed -i 's|localhost.localdomain|$(hostname -f)|g' /etc/telegraf/telegraf.conf" ]
+      - systemctl restart telegraf
       - [ python3, -m, pip, install, ansible ]
-      - [ ansible-playbook, /home/centos/condor.yml]
+      - [ ansible-galaxy, -p, /home/centos/roles, usegalaxy_eu.htcondor ]
+      - [ ansible-playbook, -i, 'localhost,', /home/centos/condor.yml]
+      - systemctl start condor
       EOF
 }
