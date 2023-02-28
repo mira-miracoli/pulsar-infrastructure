@@ -6,7 +6,6 @@ resource "openstack_compute_instance_v2" "exec-node" {
   image_id        = "${data.openstack_images_image_v2.vgcn-image.id}"
   key_pair        = "${openstack_compute_keypair_v2.my-cloud-key.name}"
   security_groups = "${var.secgroups}"
-  authorized_keys = [chomp(tls_private_key.ssh.public_key_openssh)]
 
 
   network {
@@ -14,7 +13,7 @@ resource "openstack_compute_instance_v2" "exec-node" {
   }
   
   provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u root -i '${self.ipv4_address},' --private-key vgcn.key --extra-vars= @ansible-vars.json condor-install-exec.yml"
+    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u root -i '${self.access_ip_v4},' --private-key ${var.pvt_key} --extra-vars='condor_ip_range=${var.private_network.cidr4} condor_host=${self.access_ip_v4} condor_ip_range=${var.private_network.cidr4}' condor-install-exec.yml"
   }
 
   user_data = <<-EOF
@@ -56,7 +55,5 @@ resource "openstack_compute_instance_v2" "exec-node" {
       owner: root:root
       path: /etc/auto.data
       permissions: '0644'
-    ssh_authorized_keys:
-      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC49BanKDSkoT22TWvNeL+4x/qcRi0a7Nuf+GmDXEEaCWlhvD7oeYoqVm/Jbbxo0FSDENwpMds5nR8MrdInOL1Ycp9sOoOsi0Sf1mMKhErHE2O+SHmQrPiKphams3wNSllKV80171E+7+ljYcUPREybBomZgYWlqeh46q+41AEFWxn6MYlQud/pa7TTnu/1egaWhX5W+P3l9Mo+x13LOywqbTl+545gvKg2bAHdkFkj/k/YKqM/DSFXT4Cx2r/OWZuR6oBLvsjmsld6rUdDhgIKqxQgK523NJv2gm0TS2JBXzFLsnH+ByIF55r1VCQlhYqfbl0w1O6exbc7pUnRy+ch
   EOF
 }

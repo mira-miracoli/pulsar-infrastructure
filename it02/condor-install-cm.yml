@@ -10,5 +10,4 @@
   post_tasks:
     - ansible.builtin.cron:
         minute: 0
-        job: "/usr/bin/condor_token_request_auto_approve -netblock {{ item }} -lifetime 3660"
-      loop: condor_ip_list
+        job: "/usr/bin/condor_token_request_auto_approve -netblock {{ condor_ip_range }} -lifetime 3660"

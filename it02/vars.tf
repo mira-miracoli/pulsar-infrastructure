@@ -5,10 +5,10 @@ variable "nfs_disk_size" {
 variable "flavors" {
   type = map
   default = {
-    "central-manager" = "medium"
-    "nfs-server" = "medium"
-    "exec-node" = "large"
-    "gpu-node" = "large"
+    "central-manager" = "m1.medium"
+    "nfs-server" = "m1.medium"
+    "exec-node" = "m1.small"
+    "gpu-node" = "m1.small"
   }
 }
 
@@ -23,8 +23,8 @@ variable "gpu_node_count" {
 variable "image" {
   type = map
   default = {
-    "name" = "vggp-v60-j326-d1dfcf46c4cd-main"
-    "image_source_url" = "https://usegalaxy.eu/static/vgcn/vggp-v60-j326-d1dfcf46c4cd-main.raw"
+    "name" = "vggp-v60-j221-e2504756580f-dev"
+    "image_source_url" = "https://usegalaxy.eu/static/vgcn/vggp-v60-j221-e2504756580f-dev.raw"
     "container_format" = "bare"
     "disk_format" = "raw"
    }
@@ -34,12 +34,12 @@ variable "public_key" {
   type = map
   default = {
     name = "cloud_key"
-    pubkey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDy787GZIVdHW7QV+Wu2q9q5k5CiTOq04ENioVig88IIVGNqi8qiX+3fhZx/w2hhlz6AePrYu8CfVPplCRdSMjP46av53V1M7r0+yqJvuk1PC2f/rSoEL95TvaeiV28+5Wy4MC58UvYuewuhIHcbfPiXHf3NEE3scd38GXCYKLhAP28mUQ950Ar4SoWv4irv21maJwkwqn5AYXcy1yrbBZtaTbQELVPa/E6X9j+k29bn32ITmmtKBA3ne/QlFRaaYI3XggvMXhhSSIYsJUdlSOjUTriB2DraHsxMGfOPjmPXkjvrXp9MfOzjMg10fb7K2Mda8u/ujK/dvx3BnhlSIpn marco@marco-Latitude-3440"
+    pubkey = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBHWh97MWkn8+9aBrjoCP2RqkgXACMyBVgF2ug4JZDtpQpG2MjCor7G4AbuNuvRb5lxsiQk4kaV4IrJv7PaAHmM4= mk@galaxy-mira"
   }
 }
 
 variable "name_prefix" {
-  default = "vgcn-it02-"
+  default = "vgcn-mira-"
 }
 
 variable "name_suffix" {
@@ -49,33 +49,35 @@ variable "name_suffix" {
 variable "secgroups_cm" {
   type = list
   default = [
-    "vgcn-it02-public-ssh",
-    "vgcn-it02-ingress-private",
-    "vgcn-it02-egress-public",
+    "public-ssh",
+    "ingress-private",
+    "egress-public",
   ]
 }
 
 variable "secgroups" {
   type = list
   default = [
-    "vgcn-it02-ingress-private",
-    "vgcn-it02-egress-public",
+    "ingress-private",
+    "egress-public",
   ]
 }
 
 variable "public_network" {
-  default  = "public_net"
+  default  = "public"
 }
 
 variable "private_network" {
   type = map
   default  = {
-    name = "private_net"
-    subnet_name = "private-subnet"
-    cidr4 = "172.30.135.0/24"
+    name = "vgcn-private"
+    subnet_name = "vgcn-private-subnet"
+    cidr4 = "192.52.32.0/20"
   }
 }
 
 variable "ssh-port" {
   default = "22"
 }
+
+variable "pvt_key" {}
