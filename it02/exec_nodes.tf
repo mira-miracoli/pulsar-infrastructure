@@ -12,21 +12,6 @@ resource "openstack_compute_instance_v2" "exec-node" {
     uuid = "${data.openstack_networking_network_v2.internal.id}"
   }
 
-  provisioner "remote-exec" {
-    inline = ["sudo dnf update -y", "echo Done!"]
-
-    connection {
-      host        = self.access_ip_v4
-      type        = "ssh"
-      user        = "centos"
-      private_key = file(var.pvt_key)
-    }
-  }
-
-  provisioner "local-exec" {
-    command = "sleep 20; ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook --ssh_extra_args='-o IdentitiesOnly=yes -o PasswordAuthentication=no' -u centos -b -i '${self.access_ip_v4},' --private-key ${var.pvt_key} --extra-vars='condor_ip_range=${var.private_network.cidr4} condor_host=${self.access_ip_v4} condor_ip_range=${var.private_network.cidr4}' condor-install-exec.yml"
-  }
-
   user_data = <<-EOF
     #cloud-config
     write_files:
@@ -66,5 +51,27 @@ resource "openstack_compute_instance_v2" "exec-node" {
       owner: root:root
       path: /etc/auto.data
       permissions: '0644'
-  EOF
+    - content: |
+        ---
+        - name: Install HTCondor Central Manager on Pulsar
+          become: yes
+          hosts: all
+          connection: local
+          roles:
+            - name: usegalaxy_eu.htcondor
+              vars:
+                condor_role: execute
+                condor_copy_template: false
+                condor_host: ${openstack_compute_instance_v2.central-manager.access_ip_v4}
+                condor_password: ${var.condor_pass}
+
+      owner: centos:centos
+      path: /home/centos/condor.yml
+      permissions: '0644'
+    packages: 
+      - ansible
+    runcmd:
+      - [ python3, -m, pip, install, ansible ]
+      - [ ansible-playbook, /home/centos/condor.yml]
+      EOF
 }
