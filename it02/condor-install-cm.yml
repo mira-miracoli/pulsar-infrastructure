@@ -8,6 +8,8 @@
         condor_role: central-manager
         condor_copy_template: false
   post_tasks:
-    - ansible.builtin.cron:
+    - name: Condor auto approve
+      ansible.builtin.cron:
+        name: condor_auto_approve
         minute: 0
         job: "/usr/bin/condor_token_request_auto_approve -netblock {{ condor_ip_range }} -lifetime 3660"
