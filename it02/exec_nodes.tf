@@ -11,9 +11,20 @@ resource "openstack_compute_instance_v2" "exec-node" {
   network {
     uuid = "${data.openstack_networking_network_v2.internal.id}"
   }
-  
+
+  provisioner "remote-exec" {
+    inline = ["sudo dnf update -y", "echo Done!"]
+
+    connection {
+      host        = self.access_ip_v4
+      type        = "ssh"
+      user        = "centos"
+      private_key = file(var.pvt_key)
+    }
+  }
+
   provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u centos -b -i '${self.access_ip_v4},' --private-key ${var.pvt_key} --extra-vars='condor_ip_range=${var.private_network.cidr4} condor_host=${self.access_ip_v4} condor_ip_range=${var.private_network.cidr4}' condor-install-exec.yml"
+    command = "sleep 20; ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook --ssh_extra_args='-o IdentitiesOnly=yes -o PasswordAuthentication=no' -u centos -b -i '${self.access_ip_v4},' --private-key ${var.pvt_key} --extra-vars='condor_ip_range=${var.private_network.cidr4} condor_host=${self.access_ip_v4} condor_ip_range=${var.private_network.cidr4}' condor-install-exec.yml"
   }
 
   user_data = <<-EOF
